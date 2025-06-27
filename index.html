@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lombok Live Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        .chat-container {
+            width: 90%;
+            max-width: 600px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+        .chat-header {
+            background-color: #0084ff;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            font-size: 1.2rem;
+        }
+        .chat-body {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #e5e5e5;
+        }
+        .chat-message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .chat-message.sent {
+            background-color: #0084ff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        .chat-message.received {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin-right: auto;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            background-color: #fff;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        input[type="text"], input[type="email"], input[type="password"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-right: 10px;
+            outline: none;
+            font-size: 1rem;
+        }
+        input[type="file"] {
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #0084ff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button:hover {
+            background-color: #006bb3;
+        }
+        .auth-container {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .media-preview {
+            max-width: 100px;
+            max-height: 100px;
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            .chat-container, .auth-container {
+                width: 95%;
+                height: 90vh;
+            }
+            .chat-message {
+                max-width: 85%;
+            }
+            .media-preview {
+                max-width: 80px;
+                max-height: 80px;
+            }
+            button, input[type="text"], input[type="email"], input[type="password"] {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <h2>Lombok Live Chat</h2>
+            <button onclick="logout()">Logout</button>
+        </div>
+        <div class="chat-body" id="chatBody"></div>
+        <div class="chat-input">
+            <input type="file" id="mediaInput" accept="image/*,video/*">
+            <input type="text" id="messageInput" placeholder="Ketik pesan...">
+            <button onclick="sendMessage()">Kirim</button>
+        </div>
+    </div>
+    <div class="auth-container" id="authContainer">
+        <h2>Login</h2>
+        <input type="email" id="emailInput" placeholder="Email">
+        <input type="password" id="passwordInput" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <button onclick="signup()">Daftar</button>
+    </div>
+    <div class="modal" id="mediaModal">
+        <span class="modal-close" onclick="closeModal()">×</span>
+        <img class="modal-content" id="modalImage" style="display: none;">
+        <video class="modal-content" id="modalVideo" controls style="display: none;"></video>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Inisialisasi Supabase
+        if (!window.supabase) {
+            console.error('Supabase library not loaded. Please check the CDN URL.');
+            alert('Gagal memuat library Supabase. Periksa koneksi atau CDN.');
+            throw new Error('Supabase library not loaded');
+        }
+
+        const supabaseUrl = 'https://okhxbxybtxijyonfgnuw.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9raHhieHlidHhpanlvbmZnbnV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwMDI0MDMsImV4cCI6MjA2NjU3ODQwM30.BOH-M_Q31Arx5tXcWbuuxYvBxTav0o39IPgL4IDfs7c';
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+            console.log('Supabase client initialized successfully');
+        } catch (error) {
+            console.error('Error initializing Supabase:', error.message);
+            alert('Gagal menginisialisasi Supabase: ' + error.message);
+            throw error;
+        }
+
+        let currentUser = null;
+        let displayedMessageIds = new Set(); // Untuk melacak ID pesan yang sudah ditampilkan
+
+        // Simpan sesi ke localStorage jika belum ada
+        function saveSession(user) {
+            try {
+                if (!localStorage.getItem('chatUser')) {
+                    localStorage.setItem('chatUser', JSON.stringify({
+                        id: user.id,
+                        email: user.email
+                    }));
+                    console.log('Session saved to localStorage:', user.email);
+                } else {
+                    console.log('Session already exists in localStorage, skipping save');
+                }
+            } catch (error) {
+                console.error('Error saving session:', error.message);
+            }
+        }
+
+        // Ambil sesi dari localStorage
+        function getSession() {
+            try {
+                const session = localStorage.getItem('chatUser');
+                return session ? JSON.parse(session) : null;
+            } catch (error) {
+                console.error('Error getting session:', error.message);
+                return null;
+            }
+        }
+
+        // Hapus sesi dari localStorage
+        function clearSession() {
+            try {
+                if (localStorage.getItem('chatUser')) {
+                    localStorage.removeItem('chatUser');
+                    console.log('Session cleared from localStorage');
+                } else {
+                    console.log('No session found in localStorage to clear');
+                }
+            } catch (error) {
+                console.error('Error clearing session:', error.message);
+            }
+        }
+
+        // Cek status autentikasi
+        async function checkAuth() {
+            try {
+                // Cek localStorage terlebih dahulu
+                const storedSession = getSession();
+                if (storedSession) {
+                    // Validasi sesi dengan Supabase
+                    const { data: { user }, error } = await supabase.auth.getUser();
+                    if (error) {
+                        if (error.message.includes('Auth session missing')) {
+                            console.log('No active Supabase session, clearing localStorage');
+                            clearSession();
+                            currentUser = null;
+                        } else {
+                            throw error;
+                        }
+                    } else if (user && user.id === storedSession.id) {
+                        currentUser = user;
+                        console.log('Current user from session:', currentUser.email);
+                    } else {
+                        console.log('Invalid session in localStorage, clearing');
+                        clearSession();
+                        currentUser = null;
+                    }
+                } else {
+                    // Jika tidak ada sesi di localStorage, cek Supabase
+                    const { data: { user }, error } = await supabase.auth.getUser();
+                    if (error) {
+                        if (error.message.includes('Auth session missing')) {
+                            console.log('No active Supabase session');
+                            currentUser = null;
+                        } else {
+                            throw error;
+                        }
+                    } else if (user) {
+                        currentUser = user;
+                        saveSession(user);
+                    }
+                }
+
+                if (currentUser) {
+                    document.getElementById('authContainer').style.display = 'none';
+                    document.getElementById('chatContainer').style.display = 'flex';
+                    await fetchMessages();
+                    setupRealtime();
+                } else {
+                    document.getElementById('authContainer').style.display = 'flex';
+                    document.getElementById('chatContainer').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking auth:', error.message);
+                // Hanya tampilkan alert untuk error kritis
+                if (!error.message.includes('Auth session missing')) {
+                    alert('Error autentikasi: ' + error.message);
+                }
+            }
+        }
+
+        // Login
+        async function login() {
+            try {
+                const email = document.getElementById('emailInput').value;
+                const password = document.getElementById('passwordInput').value;
+                if (!email || !password) {
+                    alert('Email dan kata sandi harus diisi.');
+                    return;
+                }
+                const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                currentUser = user;
+                saveSession(user);
+                await checkAuth();
+            } catch (error) {
+                console.error('Login error:', error.message);
+                alert('Error login: ' + error.message);
+            }
+        }
+
+        // Daftar
+        async function signup() {
+            try {
+                const email = document.getElementById('emailInput').value;
+                const password = document.getElementById('passwordInput').value;
+                if (!email || !password) {
+                    alert('Email dan kata sandi harus diisi.');
+                    return;
+                }
+                const { data: { user }, error } = await supabase.auth.signUp({ email, password });
+                if (error) throw error;
+                currentUser = user;
+                saveSession(user);
+                alert('Pendaftaran berhasil! Anda sudah login.');
+                await checkAuth();
+            } catch (error) {
+                console.error('Signup error:', error.message);
+                alert('Error daftar: ' + error.message);
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                currentUser = null;
+                clearSession();
+                document.getElementById('chatBody').innerHTML = '';
+                displayedMessageIds.clear(); // Bersihkan set ID pesan
+                await checkAuth();
+            } catch (error) {
+                console.error('Logout error:', error.message);
+                alert('Error logout: ' + error.message);
+            }
+        }
+
+        // Ambil pesan
+        async function fetchMessages() {
+            try {
+                const { data, error } = await supabase
+                    .from('messages')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+                if (error) throw error;
+                const chatBody = document.getElementById('chatBody');
+                chatBody.innerHTML = '';
+                displayedMessageIds.clear(); // Bersihkan set ID pesan
+                if (data && data.length > 0) {
+                    data.forEach(message => {
+                        console.log('Fetched message:', message); // Debug data pesan
+                        addMessageToUI(message);
+                        displayedMessageIds.add(message.id);
+                    });
+                } else {
+                    console.log('No messages found in database');
+                    chatBody.innerHTML = '<p>Belum ada pesan.</p>';
+                }
+                chatBody.scrollTop = chatBody.scrollHeight;
+            } catch (error) {
+                console.error('Error fetching messages:', error.message);
+                alert('Error mengambil pesan: ' + error.message);
+            }
+        }
+
+        // Tambahkan pesan ke UI
+        function addMessageToUI(message) {
+            if (displayedMessageIds.has(message.id)) {
+                console.log('Message already displayed, skipping:', message.id);
+                return;
+            }
+            console.log('Rendering message:', message); // Debug pesan yang dirender
+            const chatBody = document.getElementById('chatBody');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${message.user_id === currentUser?.id ? 'sent' : 'received'}`;
+            let contentHtml = `<strong>${message.username}</strong>`;
+            // Tambahkan titik dua hanya jika ada konten atau media
+            if (message.content || message.media_url) {
+                contentHtml += `: `;
+            }
+            // Tambahkan konten teks hanya jika tidak null
+            if (message.content) {
+                contentHtml += `${message.content}<br>`;
+            }
+            // Tambahkan media jika ada
+            if (message.media_url && message.media_type) {
+                if (message.media_type === 'image') {
+                    contentHtml += `<img src="${message.media_url}" class="media-preview" onclick="openModal('image', '${message.media_url}')" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22/%3E'; console.error('Failed to load image:', '${message.media_url}')">`;
+                } else if (message.media_type === 'video') {
+                    contentHtml += `<video src="${message.media_url}" class="media-preview" onclick="openModal('video', '${message.media_url}')" onerror="console.error('Failed to load video:', '${message.media_url}')"></video>`;
+                }
+            } else if (message.media_url && !message.media_type) {
+                console.warn('Media URL present but media_type missing:', message);
+                contentHtml += `<span>Gagal memuat media: tipe tidak diketahui</span>`;
+            }
+            contentHtml += `<small>${new Date(message.created_at).toLocaleTimeString()}</small>`;
+            messageDiv.innerHTML = contentHtml;
+            chatBody.appendChild(messageDiv);
+            displayedMessageIds.add(message.id);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        // Kirim pesan (teks, gambar, atau video)
+        async function sendMessage() {
+            try {
+                if (!currentUser) {
+                    alert('Silakan login terlebih dahulu.');
+                    return;
+                }
+                const input = document.getElementById('messageInput');
+                const mediaInput = document.getElementById('mediaInput');
+                const content = input.value.trim();
+                const file = mediaInput.files[0];
+                let messageData = { user_id: currentUser.id, username: currentUser.email };
+
+                // Validasi: harus ada teks atau file
+                if (!content && !file) {
+                    alert('Masukkan pesan atau pilih gambar/video.');
+                    return;
+                }
+
+                if (file) {
+                    // Validasi tipe file
+                    const fileType = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : null;
+                    if (!fileType) {
+                        alert('Hanya gambar atau video yang diperbolehkan.');
+                        return;
+                    }
+                    // Upload file ke Supabase Storage
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${currentUser.id}.${fileExt}`;
+                    console.log('Uploading file:', fileName); // Debug upload
+                    const { data, error } = await supabase.storage
+                        .from('chat-media')
+                        .upload(fileName, file);
+                    if (error) {
+                        console.error('Upload error:', error.message);
+                        throw error;
+                    }
+                    // Dapatkan URL publik
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('chat-media')
+                        .getPublicUrl(fileName);
+                    console.log('Public URL:', publicUrl); // Debug URL
+                    if (!publicUrl) {
+                        throw new Error('Gagal mendapatkan URL publik untuk media');
+                    }
+                    messageData.media_url = publicUrl;
+                    messageData.media_type = fileType;
+                }
+
+                // Tambahkan konten teks jika ada
+                if (content) {
+                    messageData.content = content;
+                }
+
+                // Simpan pesan ke database
+                console.log('Sending message to database:', messageData); // Debug data pesan
+                const { error } = await supabase
+                    .from('messages')
+                    .insert([messageData]);
+                if (error) throw error;
+
+                // Reset input
+                input.value = '';
+                mediaInput.value = '';
+            } catch (error) {
+                console.error('Error sending message:', error.message);
+                alert('Error mengirim pesan: ' + error.message);
+            }
+        }
+
+        // Setup real-time
+        function setupRealtime() {
+            try {
+                supabase
+                    .channel('public:messages')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                        console.log('New message received via real-time:', payload.new); // Debug real-time
+                        addMessageToUI(payload.new);
+                    })
+                    .subscribe((status) => {
+                        console.log('Realtime subscription status:', status);
+                        if (status === 'SUBSCRIBED') {
+                            console.log('Real-time updates active for messages');
+                        }
+                    });
+            } catch (error) {
+                console.error('Error setting up realtime:', error.message);
+                alert('Error mengatur real-time: ' + error.message);
+            }
+        }
+
+        // Fungsi untuk membuka modal preview
+        function openModal(type, url) {
+            console.log('Opening modal for', type, 'with URL:', url); // Debug modal
+            const modal = document.getElementById('mediaModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalVideo = document.getElementById('modalVideo');
+            if (type === 'image') {
+                modalImage.src = url;
+                modalImage.style.display = 'block';
+                modalVideo.style.display = 'none';
+            } else if (type === 'video') {
+                modalVideo.src = url;
+                modalVideo.style.display = 'block';
+                modalImage.style.display = 'none';
+            }
+            modal.style.display = 'flex';
+        }
+
+        // Fungsi untuk menutup modal
+        function closeModal() {
+            console.log('Closing modal'); // Debug modal
+            const modal = document.getElementById('mediaModal');
+            const modalVideo = document.getElementById('modalVideo');
+            modal.style.display = 'none';
+            modalVideo.pause(); // Hentikan video jika sedang diputar
+        }
+
+        // Kirim pesan saat tekan Enter
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Inisialisasi aplikasi
+        checkAuth();
+    </script>
+</body>
+</html>
