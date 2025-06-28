@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ubah Latar Belakang & Teks Berjalan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      padding: 20px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    :root {
+      --bg-color: #f4f4f9;
+      --text-color: #333;
+      --primary-color: #1e3a8a;
+      --accent-color: #d4af37;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    body.dark-mode {
+      --bg-color: #1a202c;
+      --text-color: #e2e8f0;
+      --card-bg: rgba(45, 55, 72, 0.9);
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    .container {
+      max-width: 500px;
+      width: 100%;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .logo {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      font-size: 1.5em;
+      font-weight: 600;
+      background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: logoFadeIn 1s ease-in-out;
+      z-index: 1000;
+    }
+    @keyframes logoFadeIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+      transition: transform 0.2s, background 0.3s;
+      z-index: 1000;
+    }
+    .theme-toggle::before {
+      content: '☀️';
+    }
+    .dark-mode .theme-toggle::before {
+      content: '🌙';
+    }
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      background: #2b6cb0;
+    }
+    h1 {
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      font-size: 1.8em;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group input[type="file"],
+    .form-group input[type="text"],
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: var(--card-bg);
+      color: var(--text-color);
+    }
+    .form-group input[type="file"]:focus,
+    .form-group input[type="text"]:focus,
+    .form-group textarea:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+    .form-group textarea {
+      height: 80px;
+      resize: vertical;
+    }
+    button[type="submit"] {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 1em;
+      transition: background 0.3s, transform 0.2s;
+      margin: 10px 5px;
+    }
+    button[type="submit"]:hover {
+      background: #2b6cb0;
+      transform: translateY(-2px);
+    }
+    .error {
+      color: #ff4444;
+      margin-top: 10px;
+      display: none;
+      font-size: 0.9em;
+    }
+    .success {
+      color: #28a745;
+      margin-top: 10px;
+      display: none;
+      font-size: 0.9em;
+    }
+    .current-text {
+      margin-bottom: 20px;
+      font-size: 1em;
+      color: var(--text-color);
+      word-break: break-all;
+    }
+    .access-popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .access-popup.active {
+      display: flex;
+      opacity: 1;
+    }
+    .access-popup-content {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      transform: scale(0.8);
+      transition: transform 0.3s ease-in-out;
+    }
+    .access-popup.active .access-popup-content {
+      transform: scale(1);
+    }
+    .access-popup-content h2 {
+      color: var(--primary-color);
+      margin-bottom: 15px;
+    }
+    .access-popup-content input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: var(--card-bg);
+      color: var(--text-color);
+    }
+    .access-popup-content input:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+    .access-popup-content button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .access-popup-content button:hover {
+      background: #2b6cb0;
+      transform: translateY(-2px);
+    }
+    .access-error {
+      color: #ff4444;
+      margin-top: 10px;
+      display: none;
+    }
+    .close-popup {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 1em;
+      transition: transform 0.2s;
+    }
+    .close-popup:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">GLOBAL NOW</div>
+  <button class="theme-toggle" onclick="toggleTheme()"></button>
+  <div class="container">
+    <h1>Ubah Latar Belakang & Teks Berjalan</h1>
+    <div id="error-message" class="error"></div>
+    <div id="success-message" class="success"></div>
+    <div id="current-text" class="current-text">Teks berjalan saat ini: <span id="running-text">Memuat...</span></div>
+    <form id="background-form">
+      <div class="form-group">
+        <h3>Unggah Gambar Latar Belakang</h3>
+        <input type="file" id="background-image" accept="image/*">
+      </div>
+      <button type="submit" id="upload-image-btn">Unggah Gambar</button>
+    </form>
+    <form id="text-form">
+      <div class="form-group">
+        <h3>Ubah Teks Berjalan</h3>
+        <textarea id="running-text-input" placeholder="Masukkan teks berjalan (maks. 500 karakter)" maxlength="500"></textarea>
+      </div>
+      <button type="submit" id="update-text-btn">Simpan Teks</button>
+    </form>
+  </div>
+  <div id="access-popup" class="access-popup">
+    <div class="access-popup-content">
+      <h2>Masukkan Kode Akses</h2>
+      <input type="text" id="access-code" placeholder="Kode Akses" required>
+      <button onclick="verifyAccessCode()">Masuk</button>
+      <div id="access-error" class="access-error">Kode akses salah!</div>
+      <button class="close-popup" onclick="closeAccessPopup()">X</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    let supabase;
+    const supabaseUrl = 'https://tbwexyrdkniaeoyrhghd.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2V4eXJka25pYWVveXJoZ2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTgwMzEsImV4cCI6MjA2NjY5NDAzMX0.Yp6qih3eQt_ipe5zcKFXqO44E7n74halhvNIEV1rcig';
+    const ACCESS_CODE = '261296';
+    let isAuthenticated = false;
+
+    function showError(message) {
+      console.log('Error:', message);
+      const errorDiv = document.getElementById('error-message');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      setTimeout(() => errorDiv.style.display = 'none', 3000);
+    }
+
+    function showSuccess(message) {
+      console.log('Success:', message);
+      const successDiv = document.getElementById('success-message');
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+      setTimeout(() => successDiv.style.display = 'none', 3000);
+    }
+
+    function showAccessPopup() {
+      try {
+        console.log('showAccessPopup called');
+        const accessPopup = document.getElementById('access-popup');
+        accessPopup.style.display = 'flex';
+        setTimeout(() => {
+          accessPopup.classList.add('active');
+        }, 10);
+        document.getElementById('access-code').focus();
+      } catch (err) {
+        showError('Terjadi kesalahan saat membuka popup akses: ' + err.message);
+        console.error('Error in showAccessPopup:', err);
+      }
+    }
+
+    function closeAccessPopup() {
+      try {
+        console.log('closeAccessPopup called');
+        const accessPopup = document.getElementById('access-popup');
+        accessPopup.classList.remove('active');
+        setTimeout(() => {
+          accessPopup.style.display = 'none';
+          document.getElementById('access-code').value = '';
+          document.getElementById('access-error').style.display = 'none';
+        }, 300);
+      } catch (err) {
+        showError('Terjadi kesalahan saat menutup popup akses: ' + err.message);
+        console.error('Error in closeAccessPopup:', err);
+      }
+    }
+
+    function verifyAccessCode() {
+      try {
+        console.log('verifyAccessCode called');
+        const code = document.getElementById('access-code').value;
+        console.log('Entered code:', code);
+        if (code === ACCESS_CODE) {
+          isAuthenticated = true;
+          closeAccessPopup();
+          document.getElementById('background-form').style.display = 'block';
+          document.getElementById('text-form').style.display = 'block';
+          fetchRunningText();
+        } else {
+          const errorDiv = document.getElementById('access-error');
+          errorDiv.style.display = 'block';
+          setTimeout(() => {
+            errorDiv.style.display = 'none';
+          }, 3000);
+        }
+      } catch (err) {
+        showError('Terjadi kesalahan saat memverifikasi kode: ' + err.message);
+        console.error('Error in verifyAccessCode:', err);
+      }
+    }
+
+    async function uploadBackgroundImage(file) {
+      console.log('uploadBackgroundImage called');
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `images/background-${Date.now()}.${fileExt}`;
+        const { data, error } = await supabase.storage
+          .from('background')
+          .upload(fileName, file);
+
+        if (error) {
+          showError('Gagal mengunggah gambar: ' + error.message);
+          console.error('Error uploading image:', error);
+          return null;
+        }
+
+        const { error: dbError } = await supabase
+          .from('background')
+          .insert({ image_path: fileName });
+
+        if (dbError) {
+          showError('Gagal menyimpan path gambar: ' + dbError.message);
+          console.error('Error saving image path:', dbError);
+          await supabase.storage.from('background').remove([fileName]);
+          return null;
+        }
+
+        showSuccess('Gambar latar belakang berhasil diunggah!');
+        return fileName;
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengunggah gambar: ' + err.message);
+        console.error('Error in uploadBackgroundImage:', err);
+        return null;
+      }
+    }
+
+    async function fetchRunningText() {
+      console.log('fetchRunningText called');
+      try {
+        const { data, error } = await supabase
+          .from('text')
+          .select('running_text')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        const runningTextSpan = document.getElementById('running-text');
+        if (error) {
+          showError('Gagal mengambil teks berjalan: ' + error.message);
+          console.error('Error fetching running text:', error);
+          runningTextSpan.textContent = 'Tidak ada teks berjalan.';
+          return;
+        }
+        runningTextSpan.textContent = data && data.running_text ? data.running_text : 'Tidak ada teks berjalan.';
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengambil teks berjalan: ' + err.message);
+        console.error('Error in fetchRunningText:', err);
+        document.getElementById('running-text').textContent = 'Tidak ada teks berjalan.';
+      }
+    }
+
+    async function updateRunningText(text) {
+      console.log('updateRunningText called with text:', text);
+      try {
+        // Sanitasi input untuk mencegah XSS
+        const sanitizedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        if (sanitizedText.length > 500) {
+          showError('Teks berjalan maksimal 500 karakter.');
+          return;
+        }
+        if (!sanitizedText.trim()) {
+          showError('Teks berjalan tidak boleh kosong.');
+          return;
+        }
+
+        // Hapus entri sebelumnya untuk memastikan hanya satu teks berjalan
+        const { error: deleteError } = await supabase
+          .from('text')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000'); // Dummy ID untuk menghapus semua
+
+        if (deleteError) {
+          showError('Gagal menghapus teks lama: ' + deleteError.message);
+          console.error('Error deleting old text:', deleteError);
+          return;
+        }
+
+        // Simpan teks baru
+        const { error: insertError } = await supabase
+          .from('text')
+          .insert({ running_text: sanitizedText });
+
+        if (insertError) {
+          showError('Gagal menyimpan teks berjalan: ' + insertError.message);
+          console.error('Error saving running text:', insertError);
+          return;
+        }
+
+        showSuccess('Teks berjalan berhasil diperbarui!');
+        fetchRunningText();
+      } catch (err) {
+        showError('Terjadi kesalahan saat menyimpan teks berjalan: ' + err.message);
+        console.error('Error in updateRunningText:', err);
+      }
+    }
+
+    function toggleTheme() {
+      try {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDarkMode = body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengganti tema: ' + err.message);
+        console.error('Error in toggleTheme:', err);
+      }
+    }
+
+    function applySystemTheme() {
+      try {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const body = document.body;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+          body.classList.add('dark-mode');
+        } else {
+          body.classList.remove('dark-mode');
+        }
+      } catch (err) {
+        showError('Terjadi kesalahan saat menerapkan tema sistem: ' + err.message);
+        console.error('Error in applySystemTheme:', err);
+      }
+    }
+
+    window.addEventListener('load', async () => {
+      console.log('Window loaded');
+      try {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        console.log('Supabase initialized:', !!supabase);
+        applySystemTheme();
+
+        // Sembunyikan formulir hingga autentikasi berhasil
+        document.getElementById('background-form').style.display = 'none';
+        document.getElementById('text-form').style.display = 'none';
+        showAccessPopup();
+
+        // Event listener untuk form unggah gambar
+        const backgroundForm = document.getElementById('background-form');
+        backgroundForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (!isAuthenticated) {
+            showError('Silakan masukkan kode akses terlebih dahulu.');
+            return;
+          }
+
+          const fileInput = document.getElementById('background-image');
+          const file = fileInput.files[0];
+          if (!file) {
+            showError('Pilih gambar terlebih dahulu.');
+            return;
+          }
+
+          if (!file.type.startsWith('image/')) {
+            showError('File harus berupa gambar (jpg, png, dll).');
+            return;
+          }
+
+          if (file.size > 5 * 1024 * 1024) {
+            showError('Ukuran gambar maksimal 5MB.');
+            return;
+          }
+
+          const fileName = await uploadBackgroundImage(file);
+          if (fileName) {
+            fileInput.value = '';
+          }
+        });
+
+        // Event listener untuk form teks berjalan
+        const textForm = document.getElementById('text-form');
+        textForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (!isAuthenticated) {
+            showError('Silakan masukkan kode akses terlebih dahulu.');
+            return;
+          }
+
+          const textInput = document.getElementById('running-text-input');
+          const text = textInput.value.trim();
+          if (!text) {
+            showError('Teks berjalan tidak boleh kosong.');
+            return;
+          }
+
+          await updateRunningText(text);
+          textInput.value = '';
+        });
+      } catch (err) {
+        showError('Terjadi kesalahan saat inisialisasi: ' + err.message);
+        console.error('Error on load:', err);
+      }
+    });
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySystemTheme);
+  </script>
+</body>
+</html>

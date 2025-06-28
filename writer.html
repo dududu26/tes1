@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Penulis - Berita Utama</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      padding: 20px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+    :root {
+      --bg-color: #f4f4f9;
+      --text-color: #333;
+      --primary-color: #1e3a8a;
+      --accent-color: #d4af37;
+      --card-bg: #ffffff;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --delete-color: #ff4444;
+      --edit-color: #28a745;
+      --link-color: #1e90ff;
+    }
+    body.dark-mode {
+      --bg-color: #1a202c;
+      --text-color: #e2e8f0;
+      --card-bg: #2d3748;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      --link-color: #63b3ed;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .logo {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      font-size: 1.5em;
+      font-weight: 600;
+      background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: logoFadeIn 1s ease-in-out;
+      z-index: 1000;
+    }
+    @keyframes logoFadeIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+      transition: transform 0.2s, background 0.3s;
+      z-index: 1000;
+    }
+    .theme-toggle::before {
+      content: '☀️';
+    }
+    .dark-mode .theme-toggle::before {
+      content: '🌙';
+    }
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      background: #2b6cb0;
+    }
+    .nav-button {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 0.9em;
+      transition: transform 0.2s, background 0.3s;
+      z-index: 1000;
+    }
+    .nav-button:hover {
+      transform: scale(1.05);
+      background: #2b6cb0;
+    }
+    h1 {
+      text-align: center;
+      color: var(--text-color);
+      margin-bottom: 20px;
+      font-size: 2em;
+      animation: fadeIn 1s ease-in;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .form-container {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      animation: fadeIn 1s ease-in;
+    }
+    input, textarea, button, input[type="file"] {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: var(--card-bg);
+      color: var(--text-color);
+      transition: border-color 0.3s;
+    }
+    input:focus, textarea:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+    button:hover {
+      background: #2b6cb0;
+      transform: translateY(-2px);
+    }
+    .news-list {
+      display: grid;
+      gap: 20px;
+    }
+    .news-item {
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      animation: fadeIn 1s ease-in;
+      transition: transform 0.3s;
+    }
+    .news-item:hover {
+      transform: translateY(-5px);
+    }
+    .news-item h3 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+    .news-item p.preview {
+      color: var(--text-color);
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .news-item small, .news-item a {
+      color: #999;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+      display: block;
+    }
+    .news-item a {
+      color: var(--link-color);
+      text-decoration: none;
+    }
+    .news-item a:hover {
+      text-decoration: underline;
+    }
+    .media-preview {
+      max-width: 100px;
+      max-height: 100px;
+      cursor: pointer;
+      margin-top: 10px;
+      border-radius: 4px;
+      transition: transform 0.3s;
+    }
+    .media-preview:hover {
+      transform: scale(1.05);
+    }
+    .read-more, .edit-btn, .delete-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 0.9em;
+      margin-top: 10px;
+      margin-right: 5px;
+      display: inline-block;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .edit-btn {
+      background: var(--edit-color);
+    }
+    .edit-btn:hover {
+      background: #218838;
+      transform: translateY(-2px);
+    }
+    .delete-btn {
+      background: var(--delete-color);
+    }
+    .delete-btn:hover {
+      background: #cc3c3c;
+      transform: translateY(-2px);
+    }
+    .read-more:hover {
+      background: #2b6cb0;
+      transform: translateY(-2px);
+    }
+    .error {
+      color: #ff4444;
+      margin-bottom: 10px;
+      display: none;
+      animation: fadeIn 0.5s;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .popup.active {
+      display: flex;
+      opacity: 1;
+    }
+    .popup-content {
+      width: 90%;
+      max-width: 600px;
+      background: var(--card-bg);
+      padding: 20px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      overflow-y: auto;
+      border-radius: 8px;
+      transform: scale(0.8);
+      transition: transform 0.3s ease-in-out;
+    }
+    .popup.active .popup-content {
+      transform: scale(1);
+    }
+    .popup-content img {
+      width: 100%;
+      max-height: 50vh;
+      border-radius: 4px;
+      object-fit: contain;
+    }
+    .popup-content video {
+      width: 100%;
+      max-height: 50vh;
+      border-radius: 4px;
+      object-fit: contain;
+    }
+    .popup-content video.horizontal {
+      transform: rotate(90deg);
+      max-height: 80vw;
+      max-width: 80vh;
+      margin: auto;
+    }
+    .popup-content h3 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+      font-size: 1.5em;
+    }
+    .popup-content p {
+      color: var(--text-color);
+      font-size: 1em;
+      line-height: 1.5;
+    }
+    .popup-content a {
+      color: var(--link-color);
+      text-decoration: none;
+    }
+    .popup-content a:hover {
+      text-decoration: underline;
+    }
+    .close-popup {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 1em;
+      transition: transform 0.2s;
+    }
+    .close-popup:hover {
+      transform: scale(1.05);
+    }
+    .orientation-button {
+      position: absolute;
+      top: 10px;
+      right: 50px;
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 50%;
+      font-size: 16px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      transition: transform 0.2s;
+    }
+    .orientation-button::before {
+      content: '\u21BB';
+    }
+    .orientation-button:hover {
+      transform: rotate(90deg);
+    }
+    .edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .edit-form button {
+      align-self: flex-start;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">LOMBOK18+</div>
+  <button class="theme-toggle" onclick="toggleTheme()"></button>
+  <button class="nav-button" onclick="window.location.href='index.html'">HALAMAN UTAMA</button>
+  <div class="container">
+    <h1>18+</h1>
+    <div class="form-container">
+      <div id="error-message" class="error"></div>
+      <input type="text" id="news-title" placeholder="Judul" required>
+      <input type="text" id="news-category" placeholder="Kategori" required>
+      <textarea id="news-content" placeholder="Deskripsi" required></textarea>
+      <input type="text" id="news-link" placeholder="Link Website (opsional, misal: https://example.com)">
+      <input type="file" id="news-media" accept="image/jpeg,image/png,video/mp4,video/webm">
+      <button id="add-news-btn">Tambah Konten</button>
+    </div>
+    <div class="news-list" id="writer-news-list"></div>
+    <div id="popup" class="popup">
+      <div class="popup-content" id="popup-content">
+        <button class="close-popup" onclick="closePopup()">X</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    console.log('Script loaded');
+    let supabase;
+    const supabaseUrl = 'https://tbwexyrdkniaeoyrhghd.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2V4eXJka25pYWVveXJoZ2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTgwMzEsImV4cCI6MjA2NjY5NDAzMX0.Yp6qih3eQt_ipe5zcKFXqO44E7n74halhvNIEV1rcig';
+
+    function showError(message) {
+      console.log('Error:', message);
+      const errorDiv = document.getElementById('error-message');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      setTimeout(() => errorDiv.style.display = 'none', 3000);
+    }
+
+    function isValidUrl(url) {
+      if (!url) return true; // URL opsional
+      try {
+        new URL(url);
+        return url.match(/^https?:\/\/[^\s$.?#].[^\s]*$/i);
+      } catch {
+        return false;
+      }
+    }
+
+    async function fetchNews() {
+      console.log('fetchNews called');
+      if (!supabase) {
+        showError('Supabase belum siap, coba lagi nanti.');
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from('news')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) {
+          showError('Gagal mengambil berita: ' + error.message);
+          return;
+        }
+        console.log('Fetched news:', data);
+        const newsList = document.getElementById('writer-news-list');
+        newsList.innerHTML = '';
+        if (!data || data.length === 0) {
+          console.log('No news data found');
+          newsList.innerHTML = '<p>Tidak ada berita yang tersedia.</p>';
+          return;
+        }
+        data.forEach(news => {
+          if (!news.id) {
+            console.error('News item missing id:', news);
+            return;
+          }
+          const newsItem = document.createElement('div');
+          newsItem.className = 'news-item';
+          const previewContent = news.content && news.content.length > 100 ? news.content.substring(0, 100) + '...' : news.content || '';
+          let mediaHtml = '';
+          let linkHtml = news.link_url ? `<a href="${news.link_url}" target="_blank" rel="noopener noreferrer">Kunjungi: ${news.link_url}</a>` : '';
+          const safeTitle = encodeURIComponent(news.title || '');
+          const safeContent = encodeURIComponent(news.content || '');
+          const safeCategory = encodeURIComponent(news.category || '');
+          const safeMediaUrl = news.media_url ? encodeURIComponent(news.media_url) : '';
+          const safeLinkUrl = news.link_url ? encodeURIComponent(news.link_url) : '';
+          if (news.media_url) {
+            if (news.media_url.match(/\.(jpeg|jpg|png)$/i)) {
+              mediaHtml = `<img src="${news.media_url}" class="media-preview" alt="${news.title || 'Berita'}" onclick="showPopup('${safeMediaUrl}', '${safeTitle}', '${safeContent}', '${safeCategory}', '${safeLinkUrl}')">`;
+            } else if (news.media_url.match(/\.(mp4|webm)$/i)) {
+              mediaHtml = `<video class="media-preview" onclick="showPopup('${safeMediaUrl}', '${safeTitle}', '${safeContent}', '${safeCategory}', '${safeLinkUrl}')"><source src="${news.media_url}" type="video/${news.media_url.split('.').pop()}"></video>`;
+            }
+          }
+          newsItem.innerHTML = `
+            <h3>${news.title || 'Tanpa Judul'}</h3>
+            <p><strong>Kategori:</strong> ${news.category || 'Tidak ada kategori'}</p>
+            <p class="preview">${previewContent}</p>
+            ${linkHtml}
+            ${mediaHtml}
+            <button class="read-more" onclick="showPopup('${safeMediaUrl}', '${safeTitle}', '${safeContent}', '${safeCategory}', '${safeLinkUrl}')">Baca Selengkapnya</button>
+            <button class="edit-btn" onclick="showEditForm('${news.id}', '${safeTitle}', '${safeContent}', '${safeMediaUrl}', '${safeCategory}', '${safeLinkUrl}')">Edit</button>
+            <button class="delete-btn" onclick="deleteNews('${news.id}', '${safeMediaUrl}')">Hapus</button>
+            <small>Diposting pada: ${news.created_at ? new Date(news.created_at).toLocaleString('id-ID') : 'Tidak diketahui'}</small>
+          `;
+          newsList.appendChild(newsItem);
+        });
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengambil berita: ' + err.message);
+        console.error('Error in fetchNews:', err);
+      }
+    }
+
+    async function addNews() {
+      console.log('addNews called');
+      if (!supabase) {
+        showError('Supabase belum siap, coba lagi nanti.');
+        return;
+      }
+      try {
+        const title = document.getElementById('news-title').value.trim();
+        const category = document.getElementById('news-category').value.trim();
+        const content = document.getElementById('news-content').value.trim();
+        const link = document.getElementById('news-link').value.trim();
+        const file = document.getElementById('news-media').files[0];
+        if (!title || !category || !content) {
+          showError('Judul, kategori, dan isi berita harus diisi.');
+          return;
+        }
+        if (link && !isValidUrl(link)) {
+          showError('Link website tidak valid. Gunakan format seperti https://example.com');
+          return;
+        }
+        let mediaUrl = null;
+        if (file) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}.${fileExt}`;
+          const { data, error: uploadError } = await supabase.storage
+            .from('news-media')
+            .upload(fileName, file);
+          if (uploadError) {
+            showError('Gagal upload media: ' + uploadError.message);
+            return;
+          }
+          const { data: urlData } = supabase.storage
+            .from('news-media')
+            .getPublicUrl(fileName);
+          mediaUrl = urlData.publicUrl;
+        }
+        const { data, error } = await supabase
+          .from('news')
+          .insert([{ title, category, content, media_url: mediaUrl, link_url: link || null }])
+          .select();
+        if (error) {
+          showError('Gagal menambah berita: ' + error.message);
+          return;
+        }
+        console.log('News added:', data);
+        document.getElementById('news-title').value = '';
+        document.getElementById('news-category').value = '';
+        document.getElementById('news-content').value = '';
+        document.getElementById('news-link').value = '';
+        document.getElementById('news-media').value = '';
+        fetchNews();
+      } catch (err) {
+        showError('Terjadi kesalahan saat menambah berita: ' + err.message);
+        console.error('Error in addNews:', err);
+      }
+    }
+
+    async function deleteNews(id, mediaUrl) {
+      console.log('deleteNews called with id:', id, 'mediaUrl:', mediaUrl);
+      if (!confirm('Yakin ingin menghapus berita ini?')) {
+        console.log('Delete cancelled');
+        return;
+      }
+      if (!supabase) {
+        showError('Supabase belum siap, coba lagi nanti.');
+        return;
+      }
+      try {
+        if (mediaUrl) {
+          const decodedMediaUrl = decodeURIComponent(mediaUrl);
+          const fileName = decodedMediaUrl.split('/').pop();
+          console.log('Attempting to delete file:', fileName);
+          const { error: storageError } = await supabase.storage
+            .from('news-media')
+            .remove([fileName]);
+          if (storageError) {
+            showError('Gagal menghapus media: ' + storageError.message);
+            return;
+          }
+        }
+        const { error } = await supabase
+          .from('news')
+          .delete()
+          .eq('id', id);
+        if (error) {
+          showError('Gagal menghapus berita: ' + error.message);
+          return;
+        }
+        console.log('News deleted:', id);
+        fetchNews();
+      } catch (err) {
+        showError('Terjadi kesalahan saat menghapus berita: ' + err.message);
+        console.error('Error in deleteNews:', err);
+      }
+    }
+
+    async function showEditForm(id, title, content, mediaUrl, category, linkUrl) {
+      console.log('showEditForm called with id:', id, 'title:', title, 'mediaUrl:', mediaUrl, 'category:', category, 'linkUrl:', linkUrl);
+      try {
+        const popup = document.getElementById('popup');
+        const popupContent = document.getElementById('popup-content');
+        const decodedTitle = decodeURIComponent(title || '');
+        const decodedContent = decodeURIComponent(content || '');
+        const decodedCategory = decodeURIComponent(category || '');
+        const decodedMediaUrl = mediaUrl ? decodeURIComponent(mediaUrl) : '';
+        const decodedLinkUrl = linkUrl ? decodeURIComponent(linkUrl) : '';
+        let mediaPreview = '';
+        if (decodedMediaUrl && decodedMediaUrl.match(/\.(jpeg|jpg|png)$/i)) {
+          mediaPreview = `<img src="${decodedMediaUrl}" alt="Media" style="max-width: 100%; max-height: 200px;">`;
+        } else if (decodedMediaUrl && decodedMediaUrl.match(/\.(mp4|webm)$/i)) {
+          mediaPreview = `<video controls style="max-width: 100%; max-height: 200px;"><source src="${decodedMediaUrl}" type="video/${decodedMediaUrl.split('.').pop()}"></video>`;
+        }
+        popupContent.innerHTML = `
+          <button class="close-popup" onclick="closePopup()">X</button>
+          <h3>Edit Berita</h3>
+          <div class="edit-form">
+            <input type="text" id="edit-title" value="${decodedTitle.replace(/"/g, '"')}" required>
+            <input type="text" id="edit-category" value="${decodedCategory.replace(/"/g, '"')}" required>
+            <textarea id="edit-content" required>${decodedContent.replace(/</g, '<').replace(/>/g, '>')}</textarea>
+            <input type="text" id="edit-link" value="${decodedLinkUrl.replace(/"/g, '"')}" placeholder="Link Website (opsional, misal: https://example.com)">
+            <div>${mediaPreview}</div>
+            <input type="file" id="edit-media" accept="image/jpeg,image/png,video/mp4,video/webm">
+            <button onclick="updateNews('${id}', '${mediaUrl}', '${linkUrl}')">Simpan Perubahan</button>
+          </div>
+        `;
+        popup.style.display = 'flex';
+        setTimeout(() => {
+          popup.classList.add('active');
+        }, 10);
+      } catch (err) {
+        showError('Terjadi kesalahan saat membuka form edit: ' + err.message);
+        console.error('Error in showEditForm:', err);
+      }
+    }
+
+    async function updateNews(id, oldMediaUrl, oldLinkUrl) {
+      console.log('updateNews called with id:', id, 'oldMediaUrl:', oldMediaUrl, 'oldLinkUrl:', oldLinkUrl);
+      if (!supabase) {
+        showError('Supabase belum siap, coba lagi nanti.');
+        return;
+      }
+      try {
+        const title = document.getElementById('edit-title').value.trim();
+        const category = document.getElementById('edit-category').value.trim();
+        const content = document.getElementById('edit-content').value.trim();
+        const link = document.getElementById('edit-link').value.trim();
+        const file = document.getElementById('edit-media').files[0];
+        if (!title || !category || !content) {
+          showError('Judul, kategori, dan isi berita harus diisi.');
+          return;
+        }
+        if (link && !isValidUrl(link)) {
+          showError('Link website tidak valid. Gunakan format seperti https://example.com');
+          return;
+        }
+        let mediaUrl = decodeURIComponent(oldMediaUrl || '');
+        if (file) {
+          if (mediaUrl) {
+            const oldFileName = mediaUrl.split('/').pop();
+            console.log('Attempting to delete old file:', oldFileName);
+            const { error: storageError } = await supabase.storage
+              .from('news-media')
+              .remove([oldFileName]);
+            if (storageError) {
+              showError('Gagal menghapus media lama: ' + storageError.message);
+              return;
+            }
+          }
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}.${fileExt}`;
+          const { data, error: uploadError } = await supabase.storage
+            .from('news-media')
+            .upload(fileName, file);
+          if (uploadError) {
+            showError('Gagal upload media: ' + uploadError.message);
+            return;
+          }
+          const { data: urlData } = supabase.storage
+            .from('news-media')
+            .getPublicUrl(fileName);
+          mediaUrl = urlData.publicUrl;
+        }
+        const { error } = await supabase
+          .from('news')
+          .update({ title, category, content, media_url: mediaUrl || null, link_url: link || null })
+          .eq('id', id);
+        if (error) {
+          showError('Gagal memperbarui berita: ' + error.message);
+          return;
+        }
+        console.log('News updated:', id);
+        closePopup();
+        fetchNews();
+      } catch (err) {
+        showError('Terjadi kesalahan saat memperbarui berita: ' + err.message);
+        console.error('Error in updateNews:', err);
+      }
+    }
+
+    function showPopup(mediaUrl, title, content, category, linkUrl) {
+      console.log('showPopup called with:', { mediaUrl, title, content, category, linkUrl });
+      try {
+        const popup = document.getElementById('popup');
+        const popupContent = document.getElementById('popup-content');
+        let mediaHtml = '';
+        let orientationButton = '';
+        const decodedTitle = decodeURIComponent(title || '');
+        const decodedContent = decodeURIComponent(content || '');
+        const decodedCategory = decodeURIComponent(category || '');
+        const decodedMediaUrl = mediaUrl ? decodeURIComponent(mediaUrl) : '';
+        const decodedLinkUrl = linkUrl ? decodeURIComponent(linkUrl) : '';
+        let linkHtml = decodedLinkUrl ? `<a href="${decodedLinkUrl}" target="_blank" rel="noopener noreferrer">Link Download: ${decodedLinkUrl}</a>` : '';
+        if (decodedMediaUrl && decodedMediaUrl.match(/\.(jpeg|jpg|png)$/i)) {
+          mediaHtml = `<img src="${decodedMediaUrl}" alt="${decodedTitle || 'Berita'}">`;
+        } else if (decodedMediaUrl && decodedMediaUrl.match(/\.(mp4|webm)$/i)) {
+          mediaHtml = `<video controls id="popup-video"><source src="${decodedMediaUrl}" type="video/${decodedMediaUrl.split('.').pop()}"></video>`;
+          orientationButton = `<button class="orientation-button" onclick="toggleOrientation()">Ubah Orientasi</button>`;
+        }
+        popupContent.innerHTML = `
+          <button class="close-popup" onclick="closePopup()">X</button>
+          ${orientationButton}
+          ${mediaHtml}
+          <h3>${decodedTitle.replace(/</g, '<').replace(/>/g, '>') || 'Tanpa Judul'}</h3>
+          <p><strong>Kategori:</strong> ${decodedCategory || 'Tidak ada kategori'}</p>
+          ${linkHtml}
+          <p>${decodedContent.replace(/</g, '<').replace(/>/g, '>') || 'Tidak ada konten'}</p>
+        `;
+        popup.style.display = 'flex';
+        setTimeout(() => {
+          popup.classList.add('active');
+        }, 10);
+      } catch (err) {
+        showError('Terjadi kesalahan saat membuka popup: ' + err.message);
+        console.error('Error in showPopup:', err);
+      }
+    }
+
+    function toggleOrientation() {
+      try {
+        const video = document.getElementById('popup-video');
+        if (video) {
+          video.classList.toggle('horizontal');
+        }
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengubah orientasi: ' + err.message);
+        console.error('Error in toggleOrientation:', err);
+      }
+    }
+
+    function closePopup() {
+      try {
+        const popup = document.getElementById('popup');
+        popup.classList.remove('active');
+        setTimeout(() => {
+          popup.style.display = 'none';
+          fetchNews();
+        }, 300);
+      } catch (err) {
+        showError('Terjadi kesalahan saat menutup popup: ' + err.message);
+        console.error('Error in closePopup:', err);
+      }
+    }
+
+    function toggleTheme() {
+      try {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDarkMode = body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengganti tema: ' + err.message);
+        console.error('Error in toggleTheme:', err);
+      }
+    }
+
+    function applySystemTheme() {
+      try {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const body = document.body;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+          body.classList.add('dark-mode');
+        } else {
+          body.classList.remove('dark-mode');
+        }
+      } catch (err) {
+        showError('Terjadi kesalahan saat menerapkan tema sistem: ' + err.message);
+        console.error('Error in applySystemTheme:', err);
+      }
+    }
+
+    window.addEventListener('load', () => {
+      console.log('Window loaded');
+      try {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        console.log('Supabase initialized:', !!supabase);
+        applySystemTheme();
+        fetchNews();
+        const addNewsBtn = document.getElementById('add-news-btn');
+        if (addNewsBtn) {
+          addNewsBtn.addEventListener('click', addNews);
+          console.log('addNews event listener added');
+        } else {
+          console.error('Button #add-news-btn not found');
+        }
+      } catch (err) {
+        showError('Terjadi kesalahan saat inisialisasi: ' + err.message);
+        console.error('Error on load:', err);
+      }
+    });
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySystemTheme);
+  </script>
+</body>
+</html>

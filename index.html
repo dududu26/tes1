@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Berita Utama</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      padding: 20px;
+      padding-bottom: 60px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: -1;
+    }
+    :root {
+      --bg-color: #f4f4f9;
+      --text-color: #333;
+      --primary-color: #1e3a8a;
+      --accent-color: #d4af37;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --link-color: #1e90ff;
+      --running-text-bg1: #ff6b6b;
+      --running-text-bg2: #4ecdc4;
+      --running-text-bg3: #45b7d1;
+      --running-text-bg4: #96ce79;
+    }
+    body.dark-mode {
+      --bg-color: #1a202c;
+      --text-color: #e2e8f0;
+      --card-bg: rgba(45, 55, 72, 0.9);
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      --link-color: #63b3ed;
+      --running-text-bg1: #e63946;
+      --running-text-bg2: #1a535c;
+      --running-text-bg3: #277da1;
+      --running-text-bg4: #6b8e23;
+    }
+    body.dark-mode::before {
+      background: rgba(0, 0, 0, 0.7);
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .logo {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      font-size: 1.5em;
+      font-weight: 600;
+      background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: logoFadeIn 1s ease-in-out;
+      z-index: 1000;
+    }
+    @keyframes logoFadeIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .running-text-container {
+      position: fixed;
+      top: 50px;
+      left: 20px;
+      right: 20px;
+      overflow: hidden;
+      z-index: 1000;
+      height: 30px;
+      border-radius: 4px;
+      box-shadow: var(--shadow);
+      animation: colorChange 8s infinite;
+    }
+    .running-text {
+      display: inline-block;
+      white-space: nowrap;
+      padding: 5px 10px;
+      color: #fff;
+      font-size: 1em;
+      font-weight: 500;
+      animation: marquee 30s linear infinite;
+    }
+    @keyframes marquee {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+    @keyframes colorChange {
+      0% { background-color: var(--running-text-bg1); }
+      25% { background-color: var(--running-text-bg2); }
+      50% { background-color: var(--running-text-bg3); }
+      75% { background-color: var(--running-text-bg4); }
+      100% { background-color: var(--running-text-bg1); }
+    }
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+      transition: transform 0.2s, background 0.3s;
+      z-index: 1000;
+    }
+    .theme-toggle::before {
+      content: '☀️';
+    }
+    .dark-mode .theme-toggle::before {
+      content: '🌙';
+    }
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      background: #2b6cb0;
+    }
+    .nav-button {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 0.9em;
+      transition: transform 0.2s, background 0.3s;
+      z-index: 1000;
+    }
+    .nav-button:hover {
+      transform: scale(1.05);
+      background: #2b6cb0;
+    }
+    h1 {
+      text-align: center;
+      color: var(--text-color);
+      margin-bottom: 20px;
+      font-size: 2em;
+      animation: fadeIn 1s ease-in;
+      background: var(--card-bg);
+      padding: 10px;
+      border-radius: 4px;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .filter-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      background: var(--card-bg);
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .filter-container input, .filter-container select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: var(--card-bg);
+      color: var(--text-color);
+      transition: border-color 0.3s;
+      flex: 1;
+      min-width: 150px;
+    }
+    .filter-container input:focus, .filter-container select:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+    .news-list {
+      display: grid;
+      gap: 20px;
+    }
+    .news-item {
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      animation: fadeIn 1s ease-in;
+      transition: transform 0.3s;
+    }
+    .news-item:hover {
+      transform: translateY(-5px);
+    }
+    .news-item h3 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+    .news-item p.preview {
+      color: var(--text-color);
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .news-item small, .news-item .view-count, .news-item .download-link {
+      color: #999;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+      display: block;
+    }
+    .news-item .download-link {
+      color: var(--link-color);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .news-item .download-link:hover {
+      text-decoration: underline;
+    }
+    .media-preview {
+      max-width: 100px;
+      max-height: 100px;
+      cursor: pointer;
+      margin-top: 10px;
+      border-radius: 4px;
+      transition: transform 0.3s;
+    }
+    .media-preview:hover {
+      transform: scale(1.05);
+    }
+    .read-more {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 0.9em;
+      margin-top: 10px;
+      display: inline-block;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .read-more:hover {
+      background: #2b6cb0;
+      transform: translateY(-2px);
+    }
+    .error {
+      color: #ff4444;
+      margin-bottom: 10px;
+      display: none;
+      animation: fadeIn 0.5s;
+      text-align: center;
+      background: var(--card-bg);
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .popup.active {
+      display: flex;
+      opacity: 1;
+    }
+    .popup-content {
+      width: 90%;
+      max-width: 600px;
+      background: var(--card-bg);
+      padding: 20px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      overflow-y: auto;
+      border-radius: 8px;
+      transform: scale(0.8);
+      transition: transform 0.3s ease-in-out;
+    }
+    .popup.active .popup-content {
+      transform: scale(1);
+    }
+    .popup-content img {
+      width: 100%;
+      max-height: 50vh;
+      border-radius: 4px;
+      object-fit: contain;
+    }
+    .popup-content video {
+      width: 100%;
+      max-height: 50vh;
+      border-radius: 4px;
+      object-fit: contain;
+    }
+    .popup-content video.horizontal {
+      transform: rotate(90deg);
+      max-height: 80vw;
+      max-width: 80vh;
+      margin: auto;
+    }
+    .popup-content h3 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+      font-size: 1.5em;
+    }
+    .popup-content p {
+      color: var(--text-color);
+      font-size: 1em;
+      line-height: 1.5;
+    }
+    .popup-content .view-count, .popup-content .download-link {
+      color: #999;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+    }
+    .popup-content .download-link {
+      color: var(--link-color);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .popup-content .download-link:hover {
+      text-decoration: underline;
+    }
+    .video-popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .video-popup.active {
+      display: flex;
+      opacity: 1;
+      }
+    .video-popup-content {
+      width: 90%;
+      max-width: 800px;
+      background: var(--card-bg);
+      padding: 20px;
+      position: relative;
+      border-radius: 8px;
+      transform: scale(0.8);
+      transition: transform 0.3s ease-in-out;
+    }
+    .video-popup.active .video-popup-content {
+      transform: scale(1);
+    }
+    .video-popup-content video {
+      width: 100%;
+      max-height: 80vh;
+      border-radius: 4px;
+      object-fit: contain;
+    }
+    .video-popup-content video.horizontal {
+      transform: rotate(90deg);
+      max-height: 80vw;
+      max-width: 80vh;
+      margin: auto;
+    }
+    .close-popup {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 1em;
+      transition: transform 0.2s;
+    }
+    .close-popup:hover {
+      transform: scale(1.05);
+    }
+    .orientation-button {
+      position: absolute;
+      top: 10px;
+      right: 50px;
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 50%;
+      font-size: 16px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      transition: transform 0.2s;
+    }
+    .orientation-button::before {
+      content: '\u21BB';
+    }
+    .orientation-button:hover {
+      transform: rotate(90deg);
+    }
+    .access-popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .access-popup.active {
+      display: flex;
+      opacity: 1;
+    }
+    .access-popup-content {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      transform: scale(0.8);
+      transition: transform 0.3s ease-in-out;
+    }
+    .access-popup.active .access-popup-content {
+      transform: scale(1);
+    }
+    .access-popup-content h2 {
+      color: var(--primary-color);
+      margin-bottom: 15px;
+    }
+    .access-popup-content input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: var(--card-bg);
+      color: var(--text-color);
+    }
+    .access-popup-content input:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+    .access-popup-content button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .access-popup-content button:hover {
+      background: #2b6cb0;
+      transform: translateY(-2px);
+    }
+    .access-error {
+      color: #ff4444;
+      margin-top: 10px;
+      display: none;
+    }
+    .social-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--card-bg);
+      padding: 10px 0;
+      text-align: center;
+      box-shadow: var(--shadow);
+      z-index: 1000;
+    }
+    .social-footer a {
+      color: var(--text-color);
+      margin: 0 15px;
+      font-size: 1.5em;
+      transition: color 0.3s, transform 0.2s;
+    }
+    .social-footer a:hover {
+      color: var(--primary-color);
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">VIDEO 18+</div>
+  <div class="running-text-container">
+    <span id="running-text" class="running-text">Memuat teks berjalan...</span>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()"></button>
+  <button class="nav-button" onclick="showAccessPopup()">...</button>
+  <div class="container">
+    <h1>VIRAL 18+</h1>
+    <div class="filter-container">
+      <input type="text" id="search-title" placeholder="Cari berdasarkan judul...">
+      <select id="category-filter">
+        <option value="">Semua Kategori</option>
+      </select>
+    </div>
+    <div id="error-message" class="error"></div>
+    <div class="news-list" id="news-list"></div>
+    <div id="popup" class="popup">
+      <div class="popup-content" id="popup-content">
+        <button class="close-popup" onclick="closePopup()">X</button>
+      </div>
+    </div>
+    <div id="video-popup" class="video-popup">
+      <div class="video-popup-content" id="video-popup-content">
+        <button class="close-popup" onclick="closeVideoPopup()">X</button>
+        <button class="orientation-button" onclick="toggleVideoOrientation('popup-video')" title="Ubah Orientasi"></button>
+      </div>
+    </div>
+    <div id="access-popup" class="access-popup">
+      <div class="access-popup-content">
+        <h2>Masukkan Kode Akses</h2>
+        <input type="text" id="access-code" placeholder="Kode Akses" required>
+        <button onclick="verifyAccessCode()">Masuk</button>
+        <div id="access-error" class="access-error">Kode akses salah!</div>
+        <button class="close-popup" onclick="closeAccessPopup()">X</button>
+      </div>
+    </div>
+  </div>
+  <div class="social-footer">
+    <a href="https://facebook.com" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+    <a href="https://twitter.com" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+    <a href="https://instagram.com" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+    <a href="https://tiktok.com" target="_blank" title="TikTok"><i class="fab fa-tiktok"></i></a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    let supabase;
+    const supabaseUrl = 'https://tbwexyrdkniaeoyrhghd.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2V4eXJka25pYWVveXJoZ2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTgwMzEsImV4cCI6MjA2NjY5NDAzMX0.Yp6qih3eQt_ipe5zcKFXqO44E7n74halhvNIEV1rcig';
+    const ACCESS_CODE = '261296';
+
+    async function fetchRunningText() {
+      console.log('fetchRunningText called');
+      try {
+        const { data, error } = await supabase
+          .from('text')
+          .select('running_text')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        const runningTextDisplay = document.getElementById('running-text');
+        if (error) {
+          showError('Gagal mengambil teks berjalan: ' + error.message);
+          console.error('Error fetching running text:', error);
+          runningTextDisplay.textContent = 'Tidak ada teks berjalan.';
+          return;
+        }
+        runningTextDisplay.textContent = data && data.running_text ? data.running_text : 'Tidak ada teks berjalan.';
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengambil teks berjalan: ' + err.message);
+        console.error('Error in fetchRunningText:', err);
+        document.getElementById('running-text').textContent = 'Tidak ada teks berjalan.';
+      }
+    }
+
+    async function fetchBackgroundImage() {
+      try {
+        const { data, error } = await supabase
+          .from('background')
+          .select('image_path')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        if (error) {
+          showError('Gagal mengambil gambar latar belakang: ' + error.message);
+          console.error('Error fetching background:', error);
+          return null;
+        }
+        if (data && data.image_path) {
+          if (!data.image_path.startsWith('http')) {
+            const { data: urlData } = supabase.storage
+              .from('background')
+              .getPublicUrl(data.image_path);
+            if (!urlData.publicUrl) {
+              showError('Gagal membuat URL gambar latar belakang.');
+              console.error('Error generating public URL for:', data.image_path);
+              return null;
+            }
+            return urlData.publicUrl;
+          }
+          return data.image_path;
+        }
+        showError('Tidak ada gambar latar belakang ditemukan.');
+        return null;
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengambil gambar latar belakang: ' + err.message);
+        console.error('Error in fetchBackgroundImage:', err);
+        return null;
+      }
+    }
+
+    async function setBackgroundImage() {
+      try {
+        const imageUrl = await fetchBackgroundImage();
+        if (imageUrl) {
+          document.body.style.backgroundImage = `url('${imageUrl}')`;
+        } else {
+          document.body.style.backgroundImage = `url('https://via.placeholder.com/1920x1080?text=Default+Background')`;
+        }
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengatur latar belakang: ' + err.message);
+        console.error('Error setting background:', err);
+        document.body.style.backgroundImage = `url('https://via.placeholder.com/1920x1080?text=Default+Background')`;
+      }
+    }
+
+    function showError(message) {
+      console.log('Error:', message);
+      const errorDiv = document.getElementById('error-message');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      setTimeout(() => errorDiv.style.display = 'none', 3000);
+    }
+
+    async function fetchCategories() {
+      console.log('fetchCategories called');
+      try {
+        const { data, error } = await supabase
+          .from('news')
+          .select('category')
+          .order('category', { ascending: true });
+        if (error) {
+          showError('Gagal mengambil kategori: ' + error.message);
+          return [];
+        }
+        const categories = [...new Set(data.map(item => item.category).filter(cat => cat))];
+        console.log('Fetched categories:', categories);
+        return categories;
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengambil kategori: ' + err.message);
+        console.error('Error in fetchCategories:', err);
+        return [];
+      }
+    }
+
+    function populateCategoryFilter(categories) {
+      const categoryFilter = document.getElementById('category-filter');
+      categoryFilter.innerHTML = '<option value="">Semua Kategori</option>';
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categoryFilter.appendChild(option);
+      });
+    }
+
+    async function incrementViewCount(newsId) {
+      console.log('incrementViewCount called for newsId:', newsId);
+      try {
+        const { data, error } = await supabase
+          .from('news')
+          .select('view_count')
+          .eq('id', newsId)
+          .single();
+        if (error) {
+          showError('Gagal mengambil view count: ' + error.message);
+          console.error('Error fetching view count:', error);
+          return;
+        }
+        const newViewCount = (data.view_count || 0) + 1;
+        const { error: updateError } = await supabase
+          .from('news')
+          .update({ view_count: newViewCount })
+          .eq('id', newsId);
+        if (updateError) {
+          showError('Gagal memperbarui view count: ' + updateError.message);
+          console.error('Error updating view count:', updateError);
+          return;
+        }
+        console.log('View count updated to:', newViewCount);
+        return newViewCount;
+      } catch (err) {
+        showError('Terjadi kesalahan saat memperbarui view count: ' + err.message);
+        console.error('Error in incrementViewCount:', err);
+      }
+    }
+
+    async function fetchNews(category = '', searchTitle = '') {
+      console.log('fetchNews called with category:', category, 'searchTitle:', searchTitle);
+      if (!supabase) {
+        showError('Supabase belum siap, coba lagi nanti.');
+        return;
+      }
+      try {
+        let query = supabase
+          .from('news')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (category) {
+          query = query.eq('category', category);
+        }
+        if (searchTitle) {
+          query = query.ilike('title', `%${searchTitle}%`);
+        }
+
+        const { data, error } = await query;
+        if (error) {
+          showError('Gagal mengambil berita: ' + error.message);
+          return;
+        }
+        console.log('Fetched news:', data);
+        const newsList = document.getElementById('news-list');
+        newsList.innerHTML = '';
+        if (!data || data.length === 0) {
+          console.log('No news data found');
+          newsList.innerHTML = '<p>Tidak ada berita yang tersedia.</p>';
+          return;
+        }
+        data.forEach(news => {
+          if (!news.id) {
+            console.error('News item missing id:', news);
+            return;
+          }
+          const newsItem = document.createElement('div');
+          newsItem.className = 'news-item';
+          const previewContent = news.content && news.content.length > 100 ? news.content.substring(0, 100) + '...' : news.content || '';
+          let mediaHtml = '';
+          let linkHtml = news.link_url ? `<a href="${news.link_url}" class="download-link" target="_blank" rel="noopener noreferrer">Download di sini</a>` : '';
+          const safeTitle = encodeURIComponent(news.title || '');
+          const safeContent = encodeURIComponent(news.content || '');
+          const safeCategory = encodeURIComponent(news.category || '');
+          const safeMediaUrl = news.media_url ? encodeURIComponent(news.media_url) : '';
+          const safeLinkUrl = news.link_url ? encodeURIComponent(news.link_url) : '';
+          if (news.media_url) {
+            if (news.media_url.match(/\.(jpeg|jpg|png)$/i)) {
+              mediaHtml = `<img src="${news.media_url}" class="media-preview" alt="${news.title || 'Berita'}" loading="lazy" onclick="showPopup('${safeMediaUrl}', '${safeTitle}', '${safeContent}', '${safeCategory}', ${news.id}, '${safeLinkUrl}')">`;
+            } else if (news.media_url.match(/\.(mp4|webm)$/i)) {
+              mediaHtml = `<video class="media-preview" loading="lazy" onclick="showVideoPopup('${safeMediaUrl}')"><source src="${news.media_url}" type="video/${news.media_url.split('.').pop()}"></video>`;
+            }
+          }
+          newsItem.innerHTML = `
+            <h3>${news.title || 'Tanpa Judul'}</h3>
+            <p><strong>Kategori:</strong> ${news.category || 'Tidak ada kategori'}</p>
+            <p class="preview">${previewContent}</p>
+            ${mediaHtml}
+            ${linkHtml}
+            <button class="read-more" onclick="showPopup('${safeMediaUrl}', '${safeTitle}', '${safeContent}', '${safeCategory}', ${news.id}, '${safeLinkUrl}')">DETAIL</button>
+            <small>Diposting pada: ${news.created_at ? new Date(news.created_at).toLocaleString('id-ID') : 'Tidak diketahui'}</small>
+            <p class="view-count">Dilihat: ${news.view_count || 0} kali</p>
+          `;
+          newsList.appendChild(newsItem);
+        });
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengambil berita: ' + err.message);
+        console.error('Error in fetchNews:', err);
+      }
+    }
+
+    function showAccessPopup() {
+      try {
+        console.log('showAccessPopup called');
+        const accessPopup = document.getElementById('access-popup');
+        accessPopup.style.display = 'flex';
+        setTimeout(() => {
+          accessPopup.classList.add('active');
+        }, 10);
+        document.getElementById('access-code').focus();
+      } catch (err) {
+        showError('Terjadi kesalahan saat membuka popup akses: ' + err.message);
+        console.error('Error in showAccessPopup:', err);
+      }
+    }
+
+    function closeAccessPopup() {
+      try {
+        console.log('closeAccessPopup called');
+        const accessPopup = document.getElementById('access-popup');
+        accessPopup.classList.remove('active');
+        setTimeout(() => {
+          accessPopup.style.display = 'none';
+          document.getElementById('access-code').value = '';
+          document.getElementById('access-error').style.display = 'none';
+        }, 300);
+      } catch (err) {
+        showError('Terjadi kesalahan saat menutup popup akses: ' + err.message);
+        console.error('Error in closeAccessPopup:', err);
+      }
+    }
+
+    function verifyAccessCode() {
+      try {
+        console.log('verifyAccessCode called');
+        const code = document.getElementById('access-code').value;
+        console.log('Entered code:', code);
+        if (code === ACCESS_CODE) {
+          window.location.href = 'writer.html';
+        } else {
+          const errorDiv = document.getElementById('access-error');
+          errorDiv.style.display = 'block';
+          setTimeout(() => {
+            errorDiv.style.display = 'none';
+          }, 3000);
+        }
+      } catch (err) {
+        showError('Terjadi kesalahan saat memverifikasi kode: ' + err.message);
+        console.error('Error in verifyAccessCode:', err);
+      }
+    }
+
+    async function showPopup(mediaUrl, title, content, category, newsId, linkUrl) {
+      console.log('showPopup called with:', { mediaUrl, title, content, category, newsId, linkUrl });
+      try {
+        const popup = document.getElementById('popup');
+        const popupContent = document.getElementById('popup-content');
+        let mediaHtml = '';
+        let orientationButton = '';
+        const decodedTitle = decodeURIComponent(title || '');
+        const decodedContent = decodeURIComponent(content || '');
+        const decodedCategory = decodeURIComponent(category || '');
+        const decodedMediaUrl = mediaUrl ? decodeURIComponent(mediaUrl) : '';
+        const decodedLinkUrl = linkUrl ? decodeURIComponent(linkUrl) : '';
+        let linkHtml = decodedLinkUrl ? `<a href="${decodedLinkUrl}" class="download-link" target="_blank" rel="noopener noreferrer">Download di sini</a>` : '';
+        
+        const newViewCount = await incrementViewCount(newsId);
+        
+        if (decodedMediaUrl) {
+          if (decodedMediaUrl.match(/\.(jpeg|jpg|png)$/i)) {
+            mediaHtml = `<img src="${decodedMediaUrl}" alt="${decodedTitle || 'Berita'}" loading="lazy">`;
+          } else if (decodedMediaUrl.match(/\.(mp4|webm)$/i)) {
+            mediaHtml = `<video controls id="popup-content-video" loading="lazy"><source src="${decodedMediaUrl}" type="video/${decodedMediaUrl.split('.').pop()}"></video>`;
+            orientationButton = `<button class="orientation-button" onclick="toggleVideoOrientation('popup-content-video')" title="Ubah Orientasi"></button>`;
+          }
+        }
+        popupContent.innerHTML = `
+          <button class="close-popup" onclick="closePopup()">X</button>
+          ${orientationButton}
+          ${mediaHtml}
+          <h3>${decodedTitle.replace(/</g, '<').replace(/>/g, '>') || 'Tanpa Judul'}</h3>
+          <p><strong>Kategori:</strong> ${decodedCategory || 'Tidak ada kategori'}</p>
+          ${linkHtml}
+          <p class="view-count">Dilihat: ${newViewCount || 0} kali</p>
+          <p>${decodedContent.replace(/</g, '<').replace(/>/g, '>') || 'Tidak ada konten'}</p>
+        `;
+        popup.style.display = 'flex';
+        setTimeout(() => {
+          popup.classList.add('active');
+        }, 10);
+      } catch (err) {
+        showError('Terjadi kesalahan saat membuka popup: ' + err.message);
+        console.error('Error in showPopup:', err);
+      }
+    }
+
+    function showVideoPopup(mediaUrl) {
+      console.log('showVideoPopup called with:', { mediaUrl });
+      try {
+        const videoPopup = document.getElementById('video-popup');
+        const videoPopupContent = document.getElementById('video-popup-content');
+        const decodedMediaUrl = decodeURIComponent(mediaUrl);
+        videoPopupContent.innerHTML = `
+          <button class="close-popup" onclick="closeVideoPopup()">X</button>
+          <button class="orientation-button" onclick="toggleVideoOrientation('popup-video')" title="Ubah Orientasi"></button>
+          <video controls id="popup-video" loading="lazy"><source src="${decodedMediaUrl}" type="video/${decodedMediaUrl.split('.').pop()}"></video>
+        `;
+        videoPopup.style.display = 'flex';
+        setTimeout(() => {
+          videoPopup.classList.add('active');
+        }, 10);
+      } catch (err) {
+        showError('Terjadi kesalahan saat membuka popup video: ' + err.message);
+        console.error('Error in showVideoPopup:', err);
+      }
+    }
+
+    function toggleVideoOrientation(videoId) {
+      try {
+        const video = document.getElementById(videoId);
+        if (video) {
+          video.classList.toggle('horizontal');
+        }
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengubah orientasi: ' + err.message);
+        console.error('Error in toggleVideoOrientation:', err);
+      }
+    }
+
+    function closePopup() {
+      try {
+        const popup = document.getElementById('popup');
+        popup.classList.remove('active');
+        setTimeout(() => {
+          popup.style.display = 'none';
+          const categoryFilter = document.getElementById('category-filter');
+          const searchTitle = document.getElementById('search-title');
+          fetchNews(categoryFilter.value, searchTitle.value.trim());
+        }, 300);
+      } catch (err) {
+        showError('Terjadi kesalahan saat menutup popup: ' + err.message);
+        console.error('Error in closePopup:', err);
+      }
+    }
+
+    function closeVideoPopup() {
+      try {
+        const videoPopup = document.getElementById('video-popup');
+        videoPopup.classList.remove('active');
+        setTimeout(() => {
+          videoPopup.style.display = 'none';
+        }, 300);
+      } catch (err) {
+        showError('Terjadi kesalahan saat menutup popup video: ' + err.message);
+        console.error('Error in closeVideoPopup:', err);
+      }
+    }
+
+    function toggleTheme() {
+      try {
+        const body = document.body;
+        body.classList.toggle('dark-mode');
+        const isDarkMode = body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+      } catch (err) {
+        showError('Terjadi kesalahan saat mengganti tema: ' + err.message);
+        console.error('Error in toggleTheme:', err);
+      }
+    }
+
+    function applySystemTheme() {
+      try {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const body = document.body;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+          body.classList.add('dark-mode');
+        } else {
+          body.classList.remove('dark-mode');
+        }
+      } catch (err) {
+        showError('Terjadi kesalahan saat menerapkan tema sistem: ' + err.message);
+        console.error('Error in applySystemTheme:', err);
+      }
+    }
+
+    window.addEventListener('load', async () => {
+      console.log('Window loaded');
+      try {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        console.log('Supabase initialized:', !!supabase);
+        applySystemTheme();
+        await setBackgroundImage();
+        const categories = await fetchCategories();
+        populateCategoryFilter(categories);
+        fetchNews();
+        fetchRunningText();
+
+        const categoryFilter = document.getElementById('category-filter');
+        const searchTitle = document.getElementById('search-title');
+        
+        categoryFilter.addEventListener('change', () => {
+          const selectedCategory = categoryFilter.value;
+          const searchQuery = searchTitle.value.trim();
+          fetchNews(selectedCategory, searchQuery);
+        });
+
+        searchTitle.addEventListener('input', () => {
+          const selectedCategory = categoryFilter.value;
+          const searchQuery = searchTitle.value.trim();
+          fetchNews(selectedCategory, searchQuery);
+        });
+      } catch (err) {
+        showError('Terjadi kesalahan saat inisialisasi: ' + err.message);
+        console.error('Error on load:', err);
+      }
+    });
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySystemTheme);
+  </script>
+</body>
+</html>
