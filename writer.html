@@ -361,6 +361,28 @@
     .edit-form button {
       align-self: flex-start;
     }
+    @media (max-width: 600px) {
+      .logo {
+        font-size: 1.2em;
+      }
+      .theme-toggle {
+        width: 35px;
+        height: 35px;
+        font-size: 1em;
+      }
+      .nav-button {
+        top: 60px;
+        padding: 6px 12px;
+        font-size: 0.8em;
+      }
+      h1 {
+        font-size: 1.5em;
+      }
+      .popup-content {
+        width: 95%;
+        padding: 15px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -384,17 +406,36 @@
         <button class="close-popup" onclick="closePopup()">X</button>
       </div>
     </div>
+    <div id="access-code-popup" class="popup">
+      <div class="popup-content">
+        <button class="close-popup" onclick="closeAccessCodePopup()">X</button>
+        <h3>Masukkan Kode Akses</h3>
+        <input type="text" id="access-code-input" placeholder="Kode Akses" required>
+        <button onclick="verifyAccessCode()">Verifikasi</button>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    console.log('Script loaded');
     let supabase;
     const supabaseUrl = 'https://tbwexyrdkniaeoyrhghd.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRid2V4eXJka25pYWVveXJoZ2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTgwMzEsImV4cCI6MjA2NjY5NDAzMX0.Yp6qih3eQt_ipe5zcKFXqO44E7n74halhvNIEV1rcig';
+    let currentAction = '';
+    let currentNewsId = '';
+    let currentEditParams = {};
+
+    function escapeHtml(unsafe) {
+      if (!unsafe) return '';
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
 
     function showError(message) {
-      console.log('Error:', message);
       const errorDiv = document.getElementById('error-message');
       errorDiv.textContent = message;
       errorDiv.style.display = 'block';
@@ -402,7 +443,7 @@
     }
 
     function isValidUrl(url) {
-      if (!url) return true; // URL opsional
+      if (!url) return true;
       try {
         new URL(url);
         return url.match(/^https?:\/\/[^\s$.?#].[^\s]*$/i);
@@ -411,8 +452,47 @@
       }
     }
 
+    function showAccessCodePopup(action, newsId, editParams = {}) {
+      currentAction = action;
+      currentNewsId = newsId;
+      currentEditParams = editParams;
+      const popup = document.getElementById('access-code-popup');
+      popup.style.display = 'flex';
+      setTimeout(() => popup.classList.add('active'), 10);
+      document.getElementById('access-code-input').value = '';
+      document.getElementById('access-code-input').focus();
+    }
+
+    function closeAccessCodePopup() {
+      const popup = document.getElementById('access-code-popup');
+      popup.classList.remove('active');
+      setTimeout(() => {
+        popup.style.display = 'none';
+      }, 300);
+    }
+
+    async function verifyAccessCode() {
+      const code = document.getElementById('access-code-input').value.trim();
+      if (code === 'dudu2612') {
+        if (currentAction === 'edit') {
+          showEditForm(
+            currentNewsId,
+            currentEditParams.title,
+            currentEditParams.content,
+            currentEditParams.mediaUrl,
+            currentEditParams.category,
+            currentEditParams.linkUrl
+          );
+        } else if (currentAction === 'delete') {
+          await deleteNews(currentNewsId, currentEditParams.mediaUrl);
+        }
+        closeAccessCodePopup();
+      } else {
+        showError('Kode akses salah.');
+      }
+    }
+
     async function fetchNews() {
-      console.log('fetchNews called');
       if (!supabase) {
         showError('Supabase belum siap, coba lagi nanti.');
         return;
@@ -423,60 +503,56 @@
           .select('*')
           .order('created_at', { ascending: false });
         if (error) {
-          showError('Gagal mengambil berita: ' + error.message);
+          showError('Gagal mengambil berita.');
           return;
         }
-        console.log('Fetched news:', data);
         const newsList = document.getElementById('writer-news-list');
         newsList.innerHTML = '';
-        if (!data || data.length === 0) {
-          console.log('No news data found');
+        if (!data?.length) {
           newsList.innerHTML = '<p>Tidak ada berita yang tersedia.</p>';
           return;
         }
         data.forEach(news => {
-          if (!news.id) {
-            console.error('News item missing id:', news);
-            return;
-          }
+          if (!news.id) return;
           const newsItem = document.createElement('div');
           newsItem.className = 'news-item';
-          const previewContent = news.content && news.content.length > 100 ? news.content.substring(0, 100) + '...' : news.content || '';
+          const previewContent = news.content && news.content.length > 100 ? escapeHtml(news.content.substring(0, 100)) + '...' : escapeHtml(news.content) || '';
           let mediaHtml = '';
-          let linkHtml = news.link_url ? `<a href="${news.link_url}" target="_blank" rel="noopener noreferrer">Kunjungi: ${news.link_url}</a>` : '';
+          let linkHtml = news.link_url ? `<a href="${encodeURI(news.link_url)}" target="_blank" rel="noopener noreferrer">Kunjungi: ${escapeHtml(news.link_url)}</a>` : '';
           const safeTitle = encodeURIComponent(news.title || '');
           const safeContent = encodeURIComponent(news.content || '');
           const safeCategory = encodeURIComponent(news.category || '');
           const safeMediaUrl = news.media_url ? encodeURIComponent(news.media_url) : '';
           const safeLinkUrl = news.link_url ? encodeURIComponent(news.link_url) : '';
           if (news.media_url) {
-            if (news.media_url.match(/\.(jpeg|jpg|png)$/i)) {
-              mediaHtml = `<img src="${news.media_url}" class="media-preview" alt="${news.title || 'Berita'}" onclick="showPopup('${safeMediaUrl}', '${safeTitle}', '${safeContent}', '${safeCategory}', '${safeLinkUrl}')">`;
-            } else if (news.media_url.match(/\.(mp4|webm)$/i)) {
-              mediaHtml = `<video class="media-preview" onclick="showPopup('${safeMediaUrl}', '${safeTitle}', '${safeContent}', '${safeCategory}', '${safeLinkUrl}')"><source src="${news.media_url}" type="video/${news.media_url.split('.').pop()}"></video>`;
+            const mediaType = news.media_url.match(/\.(jpeg|jpg|png|mp4|webm)$/i);
+            if (mediaType) {
+              if (mediaType[1].toLowerCase().match(/jpeg|jpg|png/)) {
+                mediaHtml = `<img src="${encodeURI(news.media_url)}" class="media-preview" alt="${escapeHtml(news.title) || 'Berita'}" loading="lazy" onclick="showPopup('${safeMediaUrl}', '${safeTitle}', '${safeContent}', '${safeCategory}', '${safeLinkUrl}')">`;
+              } else {
+                mediaHtml = `<video class="media-preview" loading="lazy" onclick="showPopup('${safeMediaUrl}', '${safeTitle}', '${safeContent}', '${safeCategory}', '${safeLinkUrl}')"><source src="${encodeURI(news.media_url)}" type="video/${mediaType[1].toLowerCase()}"></video>`;
+              }
             }
           }
           newsItem.innerHTML = `
-            <h3>${news.title || 'Tanpa Judul'}</h3>
-            <p><strong>Kategori:</strong> ${news.category || 'Tidak ada kategori'}</p>
+            <h3>${escapeHtml(news.title) || 'Tanpa Judul'}</h3>
+            <p><strong>Kategori:</strong> ${escapeHtml(news.category) || 'Tidak ada kategori'}</p>
             <p class="preview">${previewContent}</p>
             ${linkHtml}
             ${mediaHtml}
             <button class="read-more" onclick="showPopup('${safeMediaUrl}', '${safeTitle}', '${safeContent}', '${safeCategory}', '${safeLinkUrl}')">Baca Selengkapnya</button>
-            <button class="edit-btn" onclick="showEditForm('${news.id}', '${safeTitle}', '${safeContent}', '${safeMediaUrl}', '${safeCategory}', '${safeLinkUrl}')">Edit</button>
-            <button class="delete-btn" onclick="deleteNews('${news.id}', '${safeMediaUrl}')">Hapus</button>
+            <button class="edit-btn" onclick="showAccessCodePopup('edit', '${news.id}', {title: '${safeTitle}', content: '${safeContent}', mediaUrl: '${safeMediaUrl}', category: '${safeCategory}', linkUrl: '${safeLinkUrl}'})">Edit</button>
+            <button class="delete-btn" onclick="showAccessCodePopup('delete', '${news.id}', {mediaUrl: '${safeMediaUrl}'})">Hapus</button>
             <small>Diposting pada: ${news.created_at ? new Date(news.created_at).toLocaleString('id-ID') : 'Tidak diketahui'}</small>
           `;
           newsList.appendChild(newsItem);
         });
       } catch (err) {
-        showError('Terjadi kesalahan saat mengambil berita: ' + err.message);
-        console.error('Error in fetchNews:', err);
+        showError('Terjadi kesalahan saat mengambil berita.');
       }
     }
 
     async function addNews() {
-      console.log('addNews called');
       if (!supabase) {
         showError('Supabase belum siap, coba lagi nanti.');
         return;
@@ -499,11 +575,11 @@
         if (file) {
           const fileExt = file.name.split('.').pop();
           const fileName = `${Date.now()}.${fileExt}`;
-          const { data, error: uploadError } = await supabase.storage
+          const { error: uploadError } = await supabase.storage
             .from('news-media')
             .upload(fileName, file);
           if (uploadError) {
-            showError('Gagal upload media: ' + uploadError.message);
+            showError('Gagal upload media.');
             return;
           }
           const { data: urlData } = supabase.storage
@@ -511,15 +587,14 @@
             .getPublicUrl(fileName);
           mediaUrl = urlData.publicUrl;
         }
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('news')
           .insert([{ title, category, content, media_url: mediaUrl, link_url: link || null }])
           .select();
         if (error) {
-          showError('Gagal menambah berita: ' + error.message);
+          showError('Gagal menambah berita.');
           return;
         }
-        console.log('News added:', data);
         document.getElementById('news-title').value = '';
         document.getElementById('news-category').value = '';
         document.getElementById('news-content').value = '';
@@ -527,15 +602,12 @@
         document.getElementById('news-media').value = '';
         fetchNews();
       } catch (err) {
-        showError('Terjadi kesalahan saat menambah berita: ' + err.message);
-        console.error('Error in addNews:', err);
+        showError('Terjadi kesalahan saat menambah berita.');
       }
     }
 
     async function deleteNews(id, mediaUrl) {
-      console.log('deleteNews called with id:', id, 'mediaUrl:', mediaUrl);
       if (!confirm('Yakin ingin menghapus berita ini?')) {
-        console.log('Delete cancelled');
         return;
       }
       if (!supabase) {
@@ -546,12 +618,11 @@
         if (mediaUrl) {
           const decodedMediaUrl = decodeURIComponent(mediaUrl);
           const fileName = decodedMediaUrl.split('/').pop();
-          console.log('Attempting to delete file:', fileName);
           const { error: storageError } = await supabase.storage
             .from('news-media')
             .remove([fileName]);
           if (storageError) {
-            showError('Gagal menghapus media: ' + storageError.message);
+            showError('Gagal menghapus media.');
             return;
           }
         }
@@ -560,19 +631,16 @@
           .delete()
           .eq('id', id);
         if (error) {
-          showError('Gagal menghapus berita: ' + error.message);
+          showError('Gagal menghapus berita.');
           return;
         }
-        console.log('News deleted:', id);
         fetchNews();
       } catch (err) {
-        showError('Terjadi kesalahan saat menghapus berita: ' + err.message);
-        console.error('Error in deleteNews:', err);
+        showError('Terjadi kesalahan saat menghapus berita.');
       }
     }
 
     async function showEditForm(id, title, content, mediaUrl, category, linkUrl) {
-      console.log('showEditForm called with id:', id, 'title:', title, 'mediaUrl:', mediaUrl, 'category:', category, 'linkUrl:', linkUrl);
       try {
         const popup = document.getElementById('popup');
         const popupContent = document.getElementById('popup-content');
@@ -582,36 +650,37 @@
         const decodedMediaUrl = mediaUrl ? decodeURIComponent(mediaUrl) : '';
         const decodedLinkUrl = linkUrl ? decodeURIComponent(linkUrl) : '';
         let mediaPreview = '';
-        if (decodedMediaUrl && decodedMediaUrl.match(/\.(jpeg|jpg|png)$/i)) {
-          mediaPreview = `<img src="${decodedMediaUrl}" alt="Media" style="max-width: 100%; max-height: 200px;">`;
-        } else if (decodedMediaUrl && decodedMediaUrl.match(/\.(mp4|webm)$/i)) {
-          mediaPreview = `<video controls style="max-width: 100%; max-height: 200px;"><source src="${decodedMediaUrl}" type="video/${decodedMediaUrl.split('.').pop()}"></video>`;
+        if (decodedMediaUrl) {
+          const mediaType = decodedMediaUrl.match(/\.(jpeg|jpg|png|mp4|webm)$/i);
+          if (mediaType) {
+            if (mediaType[1].toLowerCase().match(/jpeg|jpg|png/)) {
+              mediaPreview = `<img src="${encodeURI(decodedMediaUrl)}" alt="Media" style="max-width: 100%; max-height: 200px;" loading="lazy">`;
+            } else {
+              mediaPreview = `<video controls style="max-width: 100%; max-height: 200px;" loading="lazy"><source src="${encodeURI(decodedMediaUrl)}" type="video/${mediaType[1].toLowerCase()}"></video>`;
+            }
+          }
         }
         popupContent.innerHTML = `
           <button class="close-popup" onclick="closePopup()">X</button>
           <h3>Edit Berita</h3>
           <div class="edit-form">
-            <input type="text" id="edit-title" value="${decodedTitle.replace(/"/g, '"')}" required>
-            <input type="text" id="edit-category" value="${decodedCategory.replace(/"/g, '"')}" required>
-            <textarea id="edit-content" required>${decodedContent.replace(/</g, '<').replace(/>/g, '>')}</textarea>
-            <input type="text" id="edit-link" value="${decodedLinkUrl.replace(/"/g, '"')}" placeholder="Link Website (opsional, misal: https://example.com)">
+            <input type="text" id="edit-title" value="${escapeHtml(decodedTitle)}" required>
+            <input type="text" id="edit-category" value="${escapeHtml(decodedCategory)}" required>
+            <textarea id="edit-content" required>${escapeHtml(decodedContent)}</textarea>
+            <input type="text" id="edit-link" value="${escapeHtml(decodedLinkUrl)}" placeholder="Link Website (opsional, misal: https://example.com)">
             <div>${mediaPreview}</div>
             <input type="file" id="edit-media" accept="image/jpeg,image/png,video/mp4,video/webm">
-            <button onclick="updateNews('${id}', '${mediaUrl}', '${linkUrl}')">Simpan Perubahan</button>
+            <button onclick="updateNews('${id}', '${encodeURIComponent(decodedMediaUrl)}', '${encodeURIComponent(decodedLinkUrl)}')">Simpan Perubahan</button>
           </div>
         `;
         popup.style.display = 'flex';
-        setTimeout(() => {
-          popup.classList.add('active');
-        }, 10);
+        setTimeout(() => popup.classList.add('active'), 10);
       } catch (err) {
-        showError('Terjadi kesalahan saat membuka form edit: ' + err.message);
-        console.error('Error in showEditForm:', err);
+        showError('Terjadi kesalahan saat membuka form edit.');
       }
     }
 
     async function updateNews(id, oldMediaUrl, oldLinkUrl) {
-      console.log('updateNews called with id:', id, 'oldMediaUrl:', oldMediaUrl, 'oldLinkUrl:', oldLinkUrl);
       if (!supabase) {
         showError('Supabase belum siap, coba lagi nanti.');
         return;
@@ -634,22 +703,21 @@
         if (file) {
           if (mediaUrl) {
             const oldFileName = mediaUrl.split('/').pop();
-            console.log('Attempting to delete old file:', oldFileName);
             const { error: storageError } = await supabase.storage
               .from('news-media')
               .remove([oldFileName]);
             if (storageError) {
-              showError('Gagal menghapus media lama: ' + storageError.message);
+              showError('Gagal menghapus media lama.');
               return;
             }
           }
           const fileExt = file.name.split('.').pop();
           const fileName = `${Date.now()}.${fileExt}`;
-          const { data, error: uploadError } = await supabase.storage
+          const { error: uploadError } = await supabase.storage
             .from('news-media')
             .upload(fileName, file);
           if (uploadError) {
-            showError('Gagal upload media: ' + uploadError.message);
+            showError('Gagal upload media.');
             return;
           }
           const { data: urlData } = supabase.storage
@@ -662,20 +730,17 @@
           .update({ title, category, content, media_url: mediaUrl || null, link_url: link || null })
           .eq('id', id);
         if (error) {
-          showError('Gagal memperbarui berita: ' + error.message);
+          showError('Gagal memperbarui berita.');
           return;
         }
-        console.log('News updated:', id);
         closePopup();
         fetchNews();
       } catch (err) {
-        showError('Terjadi kesalahan saat memperbarui berita: ' + err.message);
-        console.error('Error in updateNews:', err);
+        showError('Terjadi kesalahan saat memperbarui berita.');
       }
     }
 
-    function showPopup(mediaUrl, title, content, category, linkUrl) {
-      console.log('showPopup called with:', { mediaUrl, title, content, category, linkUrl });
+    async function showPopup(mediaUrl, title, content, category, linkUrl) {
       try {
         const popup = document.getElementById('popup');
         const popupContent = document.getElementById('popup-content');
@@ -686,29 +751,31 @@
         const decodedCategory = decodeURIComponent(category || '');
         const decodedMediaUrl = mediaUrl ? decodeURIComponent(mediaUrl) : '';
         const decodedLinkUrl = linkUrl ? decodeURIComponent(linkUrl) : '';
-        let linkHtml = decodedLinkUrl ? `<a href="${decodedLinkUrl}" target="_blank" rel="noopener noreferrer">Link Download: ${decodedLinkUrl}</a>` : '';
-        if (decodedMediaUrl && decodedMediaUrl.match(/\.(jpeg|jpg|png)$/i)) {
-          mediaHtml = `<img src="${decodedMediaUrl}" alt="${decodedTitle || 'Berita'}">`;
-        } else if (decodedMediaUrl && decodedMediaUrl.match(/\.(mp4|webm)$/i)) {
-          mediaHtml = `<video controls id="popup-video"><source src="${decodedMediaUrl}" type="video/${decodedMediaUrl.split('.').pop()}"></video>`;
-          orientationButton = `<button class="orientation-button" onclick="toggleOrientation()">Ubah Orientasi</button>`;
+        let linkHtml = decodedLinkUrl ? `<a href="${encodeURI(decodedLinkUrl)}" target="_blank" rel="noopener noreferrer">Link Download: ${escapeHtml(decodedLinkUrl)}</a>` : '';
+        if (decodedMediaUrl) {
+          const mediaType = decodedMediaUrl.match(/\.(jpeg|jpg|png|mp4|webm)$/i);
+          if (mediaType) {
+            if (mediaType[1].toLowerCase().match(/jpeg|jpg|png/)) {
+              mediaHtml = `<img src="${encodeURI(decodedMediaUrl)}" alt="${escapeHtml(decodedTitle) || 'Berita'}" loading="lazy">`;
+            } else {
+              mediaHtml = `<video controls id="popup-video" loading="lazy"><source src="${encodeURI(decodedMediaUrl)}" type="video/${mediaType[1].toLowerCase()}"></video>`;
+              orientationButton = `<button class="orientation-button" onclick="toggleOrientation()">Ubah Orientasi</button>`;
+            }
+          }
         }
         popupContent.innerHTML = `
           <button class="close-popup" onclick="closePopup()">X</button>
           ${orientationButton}
           ${mediaHtml}
-          <h3>${decodedTitle.replace(/</g, '<').replace(/>/g, '>') || 'Tanpa Judul'}</h3>
-          <p><strong>Kategori:</strong> ${decodedCategory || 'Tidak ada kategori'}</p>
+          <h3>${escapeHtml(decodedTitle) || 'Tanpa Judul'}</h3>
+          <p><strong>Kategori:</strong> ${escapeHtml(decodedCategory) || 'Tidak ada kategori'}</p>
           ${linkHtml}
-          <p>${decodedContent.replace(/</g, '<').replace(/>/g, '>') || 'Tidak ada konten'}</p>
+          <p>${escapeHtml(decodedContent) || 'Tidak ada konten'}</p>
         `;
         popup.style.display = 'flex';
-        setTimeout(() => {
-          popup.classList.add('active');
-        }, 10);
+        setTimeout(() => popup.classList.add('active'), 10);
       } catch (err) {
-        showError('Terjadi kesalahan saat membuka popup: ' + err.message);
-        console.error('Error in showPopup:', err);
+        showError('Terjadi kesalahan saat membuka popup.');
       }
     }
 
@@ -719,8 +786,7 @@
           video.classList.toggle('horizontal');
         }
       } catch (err) {
-        showError('Terjadi kesalahan saat mengubah orientasi: ' + err.message);
-        console.error('Error in toggleOrientation:', err);
+        showError('Terjadi kesalahan saat mengubah orientasi.');
       }
     }
 
@@ -733,8 +799,7 @@
           fetchNews();
         }, 300);
       } catch (err) {
-        showError('Terjadi kesalahan saat menutup popup: ' + err.message);
-        console.error('Error in closePopup:', err);
+        showError('Terjadi kesalahan saat menutup popup.');
       }
     }
 
@@ -742,11 +807,9 @@
       try {
         const body = document.body;
         body.classList.toggle('dark-mode');
-        const isDarkMode = body.classList.contains('dark-mode');
-        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        localStorage.setItem('theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
       } catch (err) {
-        showError('Terjadi kesalahan saat mengganti tema: ' + err.message);
-        console.error('Error in toggleTheme:', err);
+        showError('Terjadi kesalahan saat mengganti tema.');
       }
     }
 
@@ -761,28 +824,53 @@
           body.classList.remove('dark-mode');
         }
       } catch (err) {
-        showError('Terjadi kesalahan saat menerapkan tema sistem: ' + err.message);
-        console.error('Error in applySystemTheme:', err);
+        showError('Terjadi kesalahan saat menerapkan tema sistem.');
       }
     }
 
-    window.addEventListener('load', () => {
-      console.log('Window loaded');
+    async function handleUrlParams() {
       try {
-        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('Supabase initialized:', !!supabase);
-        applySystemTheme();
-        fetchNews();
-        const addNewsBtn = document.getElementById('add-news-btn');
-        if (addNewsBtn) {
-          addNewsBtn.addEventListener('click', addNews);
-          console.log('addNews event listener added');
-        } else {
-          console.error('Button #add-news-btn not found');
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action');
+        const id = urlParams.get('id');
+        if (action && id) {
+          if (action === 'edit') {
+            const { data, error } = await supabase
+              .from('news')
+              .select('*')
+              .eq('id', id)
+              .single();
+            if (error) {
+              showError('Gagal mengambil data berita untuk diedit.');
+              return;
+            }
+            if (data) {
+              showAccessCodePopup('edit', id, {
+                title: encodeURIComponent(data.title || ''),
+                content: encodeURIComponent(data.content || ''),
+                mediaUrl: data.media_url ? encodeURIComponent(data.media_url) : '',
+                category: encodeURIComponent(data.category || ''),
+                linkUrl: data.link_url ? encodeURIComponent(data.link_url) : ''
+              });
+            }
+          } else if (action === 'delete') {
+            showAccessCodePopup('delete', id, { mediaUrl: '' });
+          }
         }
       } catch (err) {
-        showError('Terjadi kesalahan saat inisialisasi: ' + err.message);
-        console.error('Error on load:', err);
+        showError('Terjadi kesalahan saat memproses parameter URL.');
+      }
+    }
+
+    window.addEventListener('load', async () => {
+      try {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        applySystemTheme();
+        await handleUrlParams();
+        fetchNews();
+        document.getElementById('add-news-btn').addEventListener('click', addNews);
+      } catch (err) {
+        showError('Terjadi kesalahan saat inisialisasi.');
       }
     });
 
